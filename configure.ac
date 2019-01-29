@@ -40,10 +40,22 @@ if test $warnaserror = "yes"; then
 fi
 
 AC_ARG_ENABLE(asan, AS_HELP_STRING([--enable-asan],[Enable address sanitizer.]),[asan=yes],[asan=no])
+AM_CONDITIONAL(HAVE_ASAN, test x$asan = xyes)
 
 if test $asan = "yes"; then
   GDIPLUS_CFLAGS="$GDIPLUS_CFLAGS -fsanitize=address,signed-integer-overflow,undefined -g -O1"
   LDFLAGS="$LDFLAGS -fsanitize=address,signed-integer-overflow,undefined"
+fi
+
+AC_ARG_WITH(fuzzer, AS_HELP_STRING([--with-fuzzer],[Enable fuzzer. Available values: "libfuzzer" or "file" (default).]),[fuzzer="$withval"],[fuzzer=no])
+AM_CONDITIONAL(HAVE_FUZZER, test x$fuzzer != xno)
+AM_CONDITIONAL(HAVE_LIBFUZZER, test x$fuzzer = xlibfuzzer)
+
+if test $fuzzer = "libfuzzer"; then
+  if test $asan = "no"; then
+    AC_MSG_ERROR(*** libfuzzer-based fuzzing needs ASan, run configure with --enable-asan.)
+  fi
+  AC_DEFINE(HAVE_LIBFUZZER, 1, Define if libfuzzer is available)
 fi
 
 AC_ARG_ENABLE(coverage, AS_HELP_STRING([--enable-coverage],[Enable code coverage.]),[coverage=yes],[coverage=no])

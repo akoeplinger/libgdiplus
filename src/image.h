@@ -50,6 +50,9 @@ GpStatus WINGDIPAPI GdipSaveImageToDelegate_linux (GpImage *image, GetBytesDeleg
 	SeekDelegate seekFunc, CloseDelegate closeFunc, SizeDelegate sizeFunc, GDIPCONST CLSID *encoderCLSID,
 	GDIPCONST EncoderParameters *params);
 
+#if defined(HAVE_LIBFUZZER)
+void WINGDIPAPI GdipLoadBitmapFromMemoryStream (BYTE *stream, int size);
+#endif
 
 /* GDI+ exported Image functions */
 GpStatus WINGDIPAPI GdipLoadImageFromStream (void /*IStream*/ *stream, GpImage **image);

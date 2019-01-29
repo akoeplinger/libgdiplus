@@ -1113,6 +1113,35 @@ GdipSaveImageToStream (GpImage *image, void *stream, GDIPCONST CLSID *encoderCLS
 	return NotImplemented; /* GdipSaveImageToStream - not supported */
 }
 
+#if defined(HAVE_LIBFUZZER)
+// libfuzzer needs a method which takes a byte stream and executes the code under test
+void WINGDIPAPI
+GdipLoadBitmapFromMemoryStream (BYTE *stream, int size)
+{
+	GpImage	*result = NULL;
+	MemorySource ms;
+
+	ms.ptr = stream;
+	ms.size = size;
+	ms.pos = 0;
+
+	BITMAPFILEHEADER bmfh;
+	int size_read;
+
+	size_read = gdip_read_bmp_data (&ms, (BYTE*)& bmfh, sizeof(bmfh), Memory);
+	if (size_read < sizeof(bmfh)) {
+		return;
+	}
+
+	if (bmfh.bfType != BFT_BITMAP) {
+		return;
+	}
+
+	gdip_read_bmp_image (&ms, &result, Memory);
+	GdipDisposeImage (result);
+}
+#endif
+
 /* coverity[+alloc : arg-*1] */
 GpStatus WINGDIPAPI 
 GdipLoadImageFromFile (GDIPCONST WCHAR *file, GpImage **image)

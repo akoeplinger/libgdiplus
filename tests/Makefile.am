@@ -367,3 +367,17 @@ EXTRA_DIST = \
 	test.ttf \
 	test.wmf \
 	testhelpers.h
+
+if HAVE_FUZZER
+fuzzer_SOURCES = fuzzer.c
+
+if HAVE_LIBFUZZER
+fuzzer_CFLAGS = -fsanitize=fuzzer
+fuzzer_LDFLAGS = -fsanitize=fuzzer
+endif
+
+fuzzer_DEPENDENCIES = $(TEST_DEPS)
+fuzzer_LDADD = $(LDADDS)
+
+noinst_PROGRAMS += fuzzer
+endif
