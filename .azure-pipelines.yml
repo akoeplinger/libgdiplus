@@ -29,15 +29,8 @@ stages:
           displayName: 'Build and Install libgdiplus'
 
         - bash: |
-            if ! make check; then
-              cat ./tests/test-suite.log
-              exit 1
-            fi
+            make check
           displayName: 'Run libgdiplus tests'
-
-        - bash: |
-            make -C tests run-gtest
-          displayName: 'Run libgdiplus googletests'
 
         - bash: |
             sudo apt -y install xvfb gettext
@@ -93,15 +86,8 @@ stages:
           displayName: 'Build and Install libgdiplus'
 
         - bash: |
-            if ! make check; then
-              cat ./tests/test-suite.log
-              exit 1
-            fi
+            make check
           displayName: 'Run libgdiplus tests'
-
-        - bash: |
-            make -C tests run-gtest
-          displayName: 'Run libgdiplus googletests'
 
         - bash: |
             brew install gettext

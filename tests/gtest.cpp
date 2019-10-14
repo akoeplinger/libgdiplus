@@ -4,27 +4,15 @@
 #define __STDC_LIMIT_MACROS
 #include <stdint.h>
 
-// Define WIN32 to get a correct definition of ULONG_PTR
-// #define WIN32
 #define M_PI 3.14159265358979323846
 #include <GdiPlusFlat.h>
 #include <math.h>
 
-#define STARTUP \
-    ULONG_PTR gdiplusToken; \
-    GdiplusStartupInput gdiplusStartupInput; \
-    gdiplusStartupInput.GdiplusVersion = 1; \
-    gdiplusStartupInput.DebugEventCallback = NULL; \
-    gdiplusStartupInput.SuppressBackgroundThread = FALSE; \
-    gdiplusStartupInput.SuppressExternalCodecs = FALSE; \
-    GdiplusStartup (&gdiplusToken, &gdiplusStartupInput, NULL); \
+#include "testhelpers.h"
 
-#define SHUTDOWN GdiplusShutdown (gdiplusToken);
-
-TEST(RegionTests, GetRegionScans_CustomMatrix_TransformsRegionScans) {
-	STARTUP
-
-		GpMatrix* matrix = NULL;
+static void GetRegionScans_CustomMatrix_TransformsRegionScans() // RegionTests
+{
+	GpMatrix* matrix = NULL;
 
 	ASSERT_EQ(0, GdipCreateMatrix(&matrix));
 	ASSERT_EQ(0, GdipTranslateMatrix(matrix, 10, 11, MatrixOrderPrepend));
@@ -42,14 +30,11 @@ TEST(RegionTests, GetRegionScans_CustomMatrix_TransformsRegionScans) {
 	GpRectF rects = { 0, 0, 0, 0 };
 	int scansCount;
 	ASSERT_EQ(0, GdipGetRegionScans(region, &rects, &scansCount, matrix));
-
-	SHUTDOWN
 }
 
-TEST(RegionTests, GdipGetPathWorldBounds) {
-	STARTUP
-
-		GpRegion* region = NULL;
+static void GdipGetPathWorldBounds() // RegionTests
+{
+	GpRegion* region = NULL;
 	ASSERT_EQ(0, GdipCreateRegion(&region));
 
 	GpRectF rectangles[] =
@@ -67,13 +52,10 @@ TEST(RegionTests, GdipGetPathWorldBounds) {
 	ASSERT_EQ(bounds.Y, rectangles[0].Y);
 	ASSERT_EQ(bounds.Width, rectangles[0].Width);
 	ASSERT_EQ(bounds.Height, rectangles[0].Height);
-
-	SHUTDOWN
 }
 
-TEST(GraphicsTest, CustomPixelFormat_GetPixels_ReturnsExpected) {
-	STARTUP
-
+static void CustomPixelFormat_GetPixels_ReturnsExpected() // GraphicsTest
+{
 	GpBitmap* bitmap = NULL;
 	ASSERT_EQ(0, GdipCreateBitmapFromScan0(2, 1, 0, PixelFormat24bppRGB, NULL, &bitmap));
 
@@ -84,25 +66,19 @@ TEST(GraphicsTest, CustomPixelFormat_GetPixels_ReturnsExpected) {
 	ASSERT_EQ(0, GdipBitmapUnlockBits(bitmap, &data));
 
 	ASSERT_EQ(0, GdipDisposeImage(bitmap));
-
-	SHUTDOWN
 }
 
 #ifdef WIN32
-TEST(GraphicsTest, FromHicon_InvalidHandle_ThrowsArgumentException) {
-	STARTUP
-
+static void FromHicon_InvalidHandle_ThrowsArgumentException() // GraphicsTest
+{
 	GpBitmap* bitmap = NULL;
 	HICON icon = (HICON)10;
 	ASSERT_EQ(NotImplemented, GdipCreateBitmapFromHICON(icon, &bitmap));
-
-	SHUTDOWN
 }
 #endif
 
-TEST(ImageAttributesTests, Clone_Success) {
-	STARTUP
-
+static void Clone_Success() // ImageAttributesTests
+{
 	GpRect rect = { 0, 0, 64, 64 };
 	GpBitmap *bitmap = NULL;
 	GpGraphics* graphics = NULL;
@@ -129,26 +105,20 @@ TEST(ImageAttributesTests, Clone_Success) {
 	ASSERT_EQ(0, GdipDisposeImageAttributes(attributes));
 	ASSERT_EQ(0, GdipDeleteGraphics(graphics));
 	ASSERT_EQ(0, GdipDisposeImage(bitmap));
-	
-	SHUTDOWN
 }
 
-TEST(InstalledFontCollectionTests, Ctor_Default) {
-	STARTUP
-
+static void Ctor_Default() // InstalledFontCollectionTests
+{
 	GpFontCollection* fontCollection = NULL;
 	ASSERT_EQ(0, GdipNewInstalledFontCollection(&fontCollection));
 
 	INT numFound = 0;
 	ASSERT_EQ(0, GdipGetFontCollectionFamilyCount(fontCollection, &numFound));
 	ASSERT_NE(0, numFound);
-
-	SHUTDOWN
 }
 
-TEST(MatrixTests, Ctor_FloatingPointBoundsInElements) {
-	STARTUP
-
+static void Ctor_FloatingPointBoundsInElements() // MatrixTests
+{
 	float values[3] = { NAN, INFINITY, -INFINITY };
 
 	for (int i = 0; i < 3; i++)
@@ -170,13 +140,10 @@ TEST(MatrixTests, Ctor_FloatingPointBoundsInElements) {
 		ASSERT_EQ(0, elements[4]);
 		ASSERT_EQ(0, elements[5]);
 	}
-
-	SHUTDOWN
 }
 
-TEST(MatrixTests, Invert_FloatBounds_ThrowsArgumentException) {
-	STARTUP
-
+static void Invert_FloatBounds_ThrowsArgumentException() // MatrixTests
+{
 	float values[3] = { NAN, INFINITY, -INFINITY };
 
 	for (int i = 0; i < 3; i++)
@@ -188,13 +155,10 @@ TEST(MatrixTests, Invert_FloatBounds_ThrowsArgumentException) {
 
 		ASSERT_EQ(InvalidParameter, GdipInvertMatrix(matrix));
 	}
-
-	SHUTDOWN
 }
 
-TEST(MatrixTests, Multiply_Matrix_Success) {
-	STARTUP
-
+static void Multiply_Matrix_Success() // MatrixTests
+{
 	GpMatrix* matrix = NULL;
 	ASSERT_EQ(0, GdipCreateMatrix2(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX, &matrix));
 
@@ -211,13 +175,10 @@ TEST(MatrixTests, Multiply_Matrix_Success) {
 	{
 		ASSERT_EQ(FLT_MAX, elements[i]);
 	}
-
-	SHUTDOWN
 }
 
-TEST(MatrixTests, Multiply_Matrix_Success2) {
-	STARTUP
-
+static void Multiply_Matrix_Success2() // MatrixTests
+{
 	GpMatrix* matrix = NULL;
 	ASSERT_EQ(0, GdipCreateMatrix2(10, 20, 30, 40, 50, 60, &matrix));
 
@@ -234,13 +195,10 @@ TEST(MatrixTests, Multiply_Matrix_Success2) {
 	{
 		ASSERT_EQ(0, elements[i]);
 	}
-
-	SHUTDOWN
 }
 
-TEST(MatrixTests, Multiply_Matrix_Success3) {
-	STARTUP
-
+static void Multiply_Matrix_Success3() // MatrixTests
+{
 	GpMatrix* matrix = NULL;
 	ASSERT_EQ(0, GdipCreateMatrix2(10, 20, 30, 40, 50, 60, &matrix));
 
@@ -258,25 +216,19 @@ TEST(MatrixTests, Multiply_Matrix_Success3) {
 	}
 	ASSERT_EQ(50, elements[4]);
 	ASSERT_EQ(60, elements[5]);
-
-	SHUTDOWN
 }
 
-TEST(LinearGradientBrushTests, Ctor_EqualPoints_ThrowsOutOfMemoryException) {
-	STARTUP
-
+static void Ctor_EqualPoints_ThrowsOutOfMemoryException() // LinearGradientBrushTests
+{
 	GpPoint point1 = { 0, 1 };
 	GpPoint point2 = { 0, 1 };
 	GpLineGradient* gradient = NULL;
 
 	ASSERT_EQ(OutOfMemory, GdipCreateLineBrushI(&point1, &point2, 0x00FF00, 0x0000FF, WrapModeTile, &gradient));
-
-	SHUTDOWN
 }
 
-TEST(CustomLineCapTests, Ctor_InvalidLineCap_ReturnsFlat) {
-	STARTUP
-
+static void Ctor_InvalidLineCap_ReturnsFlat() // CustomLineCapTests
+{
 	LineCap caps[2] = { (LineCap)(LineCapFlat - 1), (LineCap)(LineCapCustom + 1) };
 
 	for (int i = 0; i < 2; i++)
@@ -295,13 +247,10 @@ TEST(CustomLineCapTests, Ctor_InvalidLineCap_ReturnsFlat) {
 		ASSERT_EQ(Ok, GdipGetCustomLineCapBaseCap(lineCap, &baseCap));
 		ASSERT_EQ(LineCapFlat, baseCap);
 	}
-
-	SHUTDOWN
 }
 
-TEST(CustomLineCapTests, Ctor_Path_Path_LineCap_Float) {
-	STARTUP
-
+static void Ctor_Path_Path_LineCap_Float() // CustomLineCapTests
+{
 	LineCap caps[19] = 
 	{
 		(LineCap)(LineCapFlat - 1),
@@ -365,13 +314,10 @@ TEST(CustomLineCapTests, Ctor_Path_Path_LineCap_Float) {
 		ASSERT_EQ(Ok, GdipGetCustomLineCapBaseCap(lineCap, &baseCap));
 		ASSERT_EQ(expectedCap, baseCap);
 	}
-
-	SHUTDOWN
 }
 
-TEST(GraphicsPathTests, AddArc_ZeroWidthHeight_ThrowsArgumentException) {
-	STARTUP
-
+static void AddArc_ZeroWidthHeight_ThrowsArgumentException() // GraphicsPathTests
+{
 	GpPath* path;
 	ASSERT_EQ(Ok, GdipCreatePath(FillModeAlternate, &path));
 
@@ -384,12 +330,10 @@ TEST(GraphicsPathTests, AddArc_ZeroWidthHeight_ThrowsArgumentException) {
 	ASSERT_EQ(InvalidParameter, GdipAddPathArc(path, 0, 0, 0, 1, 3.14, 3.14));
 
 	ASSERT_EQ(Ok, GdipDeletePath(path));
-	SHUTDOWN
 }
 
-TEST(GraphicsPathTests, AddPie_ZeroWidthHeight_ThrowsArgumentException) {
-	STARTUP
-
+static void AddPie_ZeroWidthHeight_ThrowsArgumentException() // GraphicsPathTests
+{
 	GpPath* path;
 	ASSERT_EQ(Ok, GdipCreatePath(FillModeAlternate, &path));
 
@@ -402,12 +346,10 @@ TEST(GraphicsPathTests, AddPie_ZeroWidthHeight_ThrowsArgumentException) {
 	ASSERT_EQ(InvalidParameter, GdipAddPathPie(path, 0, 0, 0, 1, 3.14, 3.14));
 
 	ASSERT_EQ(Ok, GdipDeletePath(path));
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, ClearColorMatrix_Success) {
-	STARTUP
-
+static void ClearColorMatrix_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -447,13 +389,10 @@ TEST(ImageAttributesTests, ClearColorMatrix_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, ClearNoOp_Type_Success) {
-	STARTUP
-
+static void ClearNoOp_Type_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -486,13 +425,10 @@ TEST(ImageAttributesTests, ClearNoOp_Type_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, SetGamma_Gamma_Success) {
-	STARTUP
-
+static void SetGamma_Gamma_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -513,13 +449,10 @@ TEST(ImageAttributesTests, SetGamma_Gamma_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, ClearColorKey_Success) {
-	STARTUP
-
+static void ClearColorKey_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -541,13 +474,10 @@ TEST(ImageAttributesTests, ClearColorKey_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, ClearGamma_Type_Success) {
-	STARTUP
-
+static void ClearGamma_Type_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -569,13 +499,10 @@ TEST(ImageAttributesTests, ClearGamma_Type_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, ClearOutputChannelColorProfile_Success) {
-	STARTUP
-
+static void ClearOutputChannelColorProfile_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -597,13 +524,10 @@ TEST(ImageAttributesTests, ClearOutputChannelColorProfile_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, ClearRemapTable_Success) {
-	STARTUP
-
+static void ClearRemapTable_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -627,13 +551,10 @@ TEST(ImageAttributesTests, ClearRemapTable_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, ClearThreshold_ThresholdTypeI_Success) {
-	STARTUP
-
+static void ClearThreshold_ThresholdTypeI_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -654,13 +575,10 @@ TEST(ImageAttributesTests, ClearThreshold_ThresholdTypeI_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, GetAdjustedPalette_Disposed_ThrowsArgumentException) {
-	STARTUP
-
+static void GetAdjustedPalette_Disposed_ThrowsArgumentException() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
 
@@ -678,13 +596,10 @@ TEST(ImageAttributesTests, GetAdjustedPalette_Disposed_ThrowsArgumentException) 
 	ASSERT_EQ(InvalidParameter, GdipGetImageAttributesAdjustedPalette(attributes, palette, ColorAdjustTypeDefault));
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, SetColorMatrices_InvalidFlags_ThrowsArgumentException) {
-	STARTUP
-
+static void SetColorMatrices_InvalidFlags_ThrowsArgumentException() // ImageAttributesTests
+{
 	GpImageAttributes* attributes;
 	ASSERT_EQ(Ok, GdipCreateImageAttributes(&attributes));
 
@@ -709,13 +624,10 @@ TEST(ImageAttributesTests, SetColorMatrices_InvalidFlags_ThrowsArgumentException
 	}
 
 	ASSERT_EQ(Ok, GdipDisposeImageAttributes(attributes));
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, SetNoOp_Success) {
-	STARTUP
-
+static void SetNoOp_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -747,14 +659,10 @@ TEST(ImageAttributesTests, SetNoOp_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-
-	SHUTDOWN
 }
 
-TEST(ImageAttributesTests, SetThreshold_Threshold_Success) {
-	STARTUP
-
+static void SetThreshold_Threshold_Success() // ImageAttributesTests
+{
 	GpBitmap* bitmap = NULL;
 	GpGraphics* graphics = NULL;
 	ASSERT_EQ(Ok, GdipCreateBitmapFromScan0(64, 64, 0, PixelFormat32bppARGB, NULL, &bitmap));
@@ -776,13 +684,10 @@ TEST(ImageAttributesTests, SetThreshold_Threshold_Success) {
 
 	ASSERT_EQ(Ok, GdipDisposeImage(bitmap));
 	ASSERT_EQ(Ok, GdipDeleteGraphics(graphics));
-
-	SHUTDOWN
 }
 
-TEST(GraphicsPathTests, AddArc_Rectangle_Success) {
-	STARTUP
-
+static void AddArc_Rectangle_Success() // GraphicsPathTests
+{
 	GpPath* path = NULL;
 	ASSERT_EQ(Ok, GdipCreatePath(FillModeAlternate, &path));
 
@@ -822,6 +727,36 @@ TEST(GraphicsPathTests, AddArc_Rectangle_Success) {
 	ASSERT_NEAR(2.01370716, bounds.Y, 0.001);
 	ASSERT_NEAR(0, bounds.Width, 0.001);
 	ASSERT_NEAR(0.0137047768, bounds.Height, 0.001);
-
-	SHUTDOWN
 }
+
+LIBGDIPLUS_TEST (RegionTests, GetRegionScans_CustomMatrix_TransformsRegionScans)
+LIBGDIPLUS_TEST (RegionTests, GdipGetPathWorldBounds)
+LIBGDIPLUS_TEST (GraphicsTest, CustomPixelFormat_GetPixels_ReturnsExpected)
+#ifdef WIN32
+LIBGDIPLUS_TEST (GraphicsTest, FromHicon_InvalidHandle_ThrowsArgumentException)
+#endif
+LIBGDIPLUS_TEST (ImageAttributesTests, Clone_Success)
+LIBGDIPLUS_TEST (InstalledFontCollectionTests, Ctor_Default)
+LIBGDIPLUS_TEST (MatrixTests, Ctor_FloatingPointBoundsInElements)
+LIBGDIPLUS_TEST (MatrixTests, Invert_FloatBounds_ThrowsArgumentException)
+LIBGDIPLUS_TEST (MatrixTests, Multiply_Matrix_Success)
+LIBGDIPLUS_TEST (MatrixTests, Multiply_Matrix_Success2)
+LIBGDIPLUS_TEST (MatrixTests, Multiply_Matrix_Success3)
+LIBGDIPLUS_TEST (LinearGradientBrushTests, Ctor_EqualPoints_ThrowsOutOfMemoryException)
+LIBGDIPLUS_TEST (CustomLineCapTests, Ctor_InvalidLineCap_ReturnsFlat)
+LIBGDIPLUS_TEST (CustomLineCapTests, Ctor_Path_Path_LineCap_Float)
+LIBGDIPLUS_TEST (GraphicsPathTests, AddArc_ZeroWidthHeight_ThrowsArgumentException)
+LIBGDIPLUS_TEST (GraphicsPathTests, AddPie_ZeroWidthHeight_ThrowsArgumentException)
+LIBGDIPLUS_TEST (ImageAttributesTests, ClearColorMatrix_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, ClearNoOp_Type_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, SetGamma_Gamma_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, ClearColorKey_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, ClearGamma_Type_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, ClearOutputChannelColorProfile_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, ClearRemapTable_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, ClearThreshold_ThresholdTypeI_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, GetAdjustedPalette_Disposed_ThrowsArgumentException)
+LIBGDIPLUS_TEST (ImageAttributesTests, SetColorMatrices_InvalidFlags_ThrowsArgumentException)
+LIBGDIPLUS_TEST (ImageAttributesTests, SetNoOp_Success)
+LIBGDIPLUS_TEST (ImageAttributesTests, SetThreshold_Threshold_Success)
+LIBGDIPLUS_TEST (GraphicsPathTests, AddArc_Rectangle_Success)

@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <float.h>
 #include <math.h>
 #include <string.h>
@@ -9,16 +8,32 @@
 #include <unistd.h>
 #endif
 
-#define STARTUP \
-    ULONG_PTR gdiplusToken; \
-    GdiplusStartupInput gdiplusStartupInput; \
-    gdiplusStartupInput.GdiplusVersion = 1; \
-    gdiplusStartupInput.DebugEventCallback = NULL; \
-    gdiplusStartupInput.SuppressBackgroundThread = FALSE; \
-    gdiplusStartupInput.SuppressExternalCodecs = FALSE; \
-    GdiplusStartup (&gdiplusToken, &gdiplusStartupInput, NULL); \
+#include <gtest/gtest.h>
+#include <GdiPlusFlat.h>
 
-#define SHUTDOWN GdiplusShutdown (gdiplusToken);
+extern ULONG_PTR globalGdiplusToken;
+extern void StartupGdiplus ();
+extern void ShutdownGdiplus ();
+
+#define LIBGDIPLUS_TEST(suite, testcase) TEST(suite, testcase) { testcase(); }
+#define LIBGDIPLUS_TEST_WITHOUT_INIT(suite, testcase) TEST(suite, testcase) { ShutdownGdiplus(); testcase(); StartupGdiplus (); }
+
+#define assertEqual(actual, expected) ASSERT_EQ(actual, expected)
+
+#define expectEqualInt(actual, expected) EXPECT_EQ(actual, expected)
+
+#define assertEqualInt(actual, expected) ASSERT_EQ(actual, expected)
+#define assertEqualIntImpl(actual, expected, message, file, function, line) ASSERT_EQ(actual, expected) << "message: " << message << "file: " << file << "function: " << function << "line: " << line
+
+#define assertEqualFloat(actual, expected) ASSERT_FLOAT_EQ(actual, expected)
+#define assertNaN(value) ASSERT_TRUE(isnan(value))
+
+#define assertSimilarFloat(actual, expected, tolerance) ASSERT_NEAR(actual, expected, tolerance)
+
+#define assertEqualString(actual, expected) ASSERT_TRUE(stringsEqual(actual, expected)) << "Expected: " << expected << "\nActual:   " << actual
+
+#define assertTrue(value) ASSERT_TRUE(value)
+#define assertFalse(value) ASSERT_FALSE(value)
 
 #if !defined(__has_attribute)
 #define __has_attribute(x) 0
@@ -86,53 +101,6 @@ ATTRIBUTE_USED static void printFailure(const char *file, const char *function, 
     fprintf (stderr, "Assertion failure: file %s in %s, line %d\n", file, function, line);
 }
 
-ATTRIBUTE_USED static void assertEqualIntImpl (INT actual, INT expected, const char *message, const char *file, const char *function, int line)
-{
-    if (actual != expected)
-    {
-        if (message)
-            fprintf (stderr, "%s\n", message);
-
-        printFailure (file, function, line);
-        fprintf (stderr, "Expected: %d\n", expected);
-        fprintf (stderr, "Actual:   %d\n", actual);
-        abort();
-    }
-}
-
-#define assertEqualInt(actual, expected) assertEqualIntImpl (actual, expected, NULL, __FILE__, __func__, __LINE__)
-
-ATTRIBUTE_USED static void assertEqualFloatImpl (REAL actual, REAL expected, const char *message, const char *file, const char *function, int line)
-{
-    if (!floatsEqual (actual, expected))
-    {
-        if (message)
-            fprintf (stderr, "%s\n", message);
-
-        printFailure (file, function, line);
-        fprintf (stderr, "Expected: %f\n", expected);
-        fprintf (stderr, "Actual:   %f\n", actual);
-        abort ();
-    }
-}
-
-#define assertEqualFloat(actual, expected) assertEqualFloatImpl (actual, expected, NULL, __FILE__, __func__, __LINE__)
-
-ATTRIBUTE_USED static void assertSimilarFloatImpl (REAL actual, REAL expected, REAL tolerance, const char *message, const char *file, const char *function, int line)
-{
-    if (fabs(actual - expected) > fabs(tolerance)) {
-        if (message)
-            fprintf (stderr, "%s\n", message);
-
-        printFailure (file, function, line);
-        fprintf (stderr, "Expected %f +/- %f\n", expected, tolerance);
-        fprintf (stderr, "Actual:   %f\n", actual);
-        abort ();
-    }
-}
-
-#define assertSimilarFloat(actual, expected, tolerance) assertSimilarFloatImpl (actual, expected, tolerance, NULL, __FILE__, __func__, __LINE__)
-
 ATTRIBUTE_USED static BOOL stringsEqual (const WCHAR *actual, const char *expected)
 {
     int i = 0;
@@ -149,26 +117,6 @@ ATTRIBUTE_USED static BOOL stringsEqual (const WCHAR *actual, const char *expect
 
     return TRUE;
 }
-
-ATTRIBUTE_USED static void assertEqualStringImpl(const WCHAR *actual, const char * expected, const char *message, const char *file, const char *function, int line)
-{
-    if (!stringsEqual (actual, expected))
-    {
-        char *actualA = charFromWchar (actual);
-
-        if (message)
-            fprintf (stderr, "%s\n", message);
-
-        printFailure (file, function, line);
-        fprintf (stderr, "Expected: %s\n", expected);
-        fprintf (stderr, "Actual:   %s\n", actualA);
-
-        freeChar (actualA);
-        abort();
-    }
-}
-
-#define assertEqualString(actual, expected) assertEqualStringImpl (actual, expected, NULL, __FILE__, __func__, __LINE__)
 
 ATTRIBUTE_USED static void assertEqualRectImpl (GpRectF actual, GpRectF expected, const char *message, const char *file, const char *function, int line)
 {
@@ -564,23 +512,6 @@ ATTRIBUTE_USED static BOOL is_32bit()
     } \
 }
 
-
-ATTRIBUTE_USED static void assertEqualARGBImpl (ARGB actual, ARGB expected, const char *message, const char *file, const char *function, int line)
-{
-    if (actual != expected)
-    {
-        if (message)
-            fprintf (stderr, "%s\n", message);
-
-        printFailure (file, function, line);
-        fprintf (stderr, "Expected: 0x%08X\n", expected);
-        fprintf (stderr, "Actual:   0x%08X\n", actual);
-        abort();
-    }
-}
-
-#define assertEqualARGB(actual, expected) assertEqualARGBImpl (actual, expected, NULL, __FILE__, __func__, __LINE__)
-
 #define verifyPixels(image, expectedPixels) \
 { \
     GpStatus status; \
@@ -603,7 +534,7 @@ ATTRIBUTE_USED static void assertEqualARGBImpl (ARGB actual, ARGB expected, cons
                 fprintf (stderr, "Expected: 0x%08X\n", expected); \
                 fprintf (stderr, "Actual:   0x%08X\n", actual);   \
                 dumpPixels (image); \
-                assert (expected == actual); \
+                assertEqual (expected, actual); \
             } \
         } \
     } \
@@ -633,7 +564,7 @@ ATTRIBUTE_USED static void assertEqualARGBImpl (ARGB actual, ARGB expected, cons
             fprintf (stderr, "Expected: 0x%08X\n", entries[i]); \
             fprintf (stderr, "Actual:   0x%08X\n", palette->Entries[i]);   \
             dumpPalette (palette); \
-            assert (entries[i] == palette->Entries[i]); \
+            assertEqual (entries[i], palette->Entries[i]); \
         } \
     } \
  \

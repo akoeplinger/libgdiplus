@@ -6,10 +6,10 @@
             "type": "cppdbg",
             "request": "launch",
             "preLaunchTask": "Build",
-            "program": "${workspaceFolder}/tests/.libs/${fileBasenameNoExtension}",
+            "program": "${workspaceFolder}/tests/.libs/gtest",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/tests",
             "environment": [{
                 "Name": "DYLD_LIBRARY_PATH",
                 "Value": "${workspaceFolder}/src/.libs:$DYLD_LIBRARY_PATH"
